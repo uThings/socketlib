@@ -1,0 +1,293 @@
+
+/*****************************************************************
+
+ Copyright 2003   PIER LUCA MONTESSORO
+
+ University of Udine
+ ITALY
+
+ montessoro@uniud.it
+ www.montessoro.it
+
+ This file is part of a freeware open source software package.
+ It can be freely used (as it is or modified) as long as this
+ copyright note is not removed.
+
+******************************************************************/
+
+
+This is a brief documentation of the Pier Luca Montessoro's socketlib
+functions that make easy writing simple client-server appplications.
+User messages to be sent and received must be ASCII strings. However, 
+the functions can be easily extended to binary data exchange.
+
+
+TCPSOCKETLIB
+
+- int create_tcp_client_connection (char *ip_address, int port);
+Creates a TCP client. Server IP address (string format, e.g. "10.0.0.1")
+and TCP port (integer) are passed as arguments.
+Returns the socket identifier, -1 on failure.
+
+
+- int create_tcp_server (char *ip_address, int port);
+Creates a TCP server. Its own IP address (string format, e.g. "10.0.0.1")
+and TCP port (integer) are passed as arguments.
+This function calls server_handle (see below), a user-defined function,
+that will execute the server actions.
+Returns the socket identifier, -1 on failure.
+
+
+- int close_tcp_connection (int sk);
+Closes a TCP connection. Should be called by both sides of the connections
+(client and server). The socket identifier is passed as argument.
+Returns 1 on success, 0 (or exits via the error_handler function) on failure.
+
+
+void tcp_set_non_blocking_mode (int sk);
+void tcp_set_blocking_mode (int sk);
+Sets the mode to blocking or non-blocking. Currently implemented for receive
+only: dimension of received data is greater than zero after successful receive.
+WARNING: makes blocking/non-blocking every protocol on that socket!
+
+
+- int tcp_send (int sk, char *buffer);
+Sends the string in buffer ('\0' terminated) through the TCP connection.
+The socket identifier is passed as argument.
+Returns 1 on success, 0 (or exits via the error_handler function) on failure.
+
+
+- int tcp_binary_send (int sk, char *buffer, int msg_len);
+Sends msg_len data contained in buffer through the TCP connection.
+The socket identifier is passed as argument.
+Returns 1 on success, 0 (or exits via the error_handler function) on failure.
+
+
+- int tcp_receive (int sk, char *buffer);
+Receives a string from the TCP connection and puts it into buffer
+('\0' terminated). The socket identifier is passed as argument.
+Returns the number of bytes received, -1 (or exits via the error_handler
+function) on failure.
+
+
+- int tcp_binary_receive (int sk, char *buffer);
+Receives data from the TCP connection and puts it into buffer.
+The socket identifier is passed as argument.
+Returns the number of bytes received, -1 (or exits via the error_handler
+function) on failure.
+
+
+- void tcp_putchar (int sk, int ch);
+- int tcp_getchar (int sk);
+Same as getc and putc, but from/to the TCP connection instead of
+stdin/stdout.
+
+
+int server_handler (int sk, char *ip_addr, int port);
+Put here the server actions. Client IP address and TCP port are passed 
+in ip_addr and port arguments. For parallel server, here will be executed 
+the fork function to create child processes.
+server_handler is called by create_tcp_server. If server_handler returns 0,
+the server process is terminated, otherwise the server process executes 
+the accept() primitive again.
+
+
+UDPSOCKETLIB
+
+- int create_udp_client (void);
+Creates a UDP client.
+Returns the socket identifier, -1 on failure.
+
+
+- int create_udp_server (char *ip_address, int port);
+Creates a UDP server. Its own IP address (string format, e.g. "10.0.0.1")
+and UDP port (integer) are passed as arguments.
+Returns the socket identifier, -1 on failure.
+
+
+- int close_udp_socket (int sk);
+Closes a UDP socket. The socket identifier is passed as argument.
+Returns 1 on success, 0 (or exits via the error_handler function) on failure.
+
+
+void udp_set_non_blocking_mode (int sk);
+void udp_set_blocking_mode (int sk);
+Sets the mode to blocking or non-blocking. Currently implemented for receive
+only: dimension of received data is greater than zero after successful receive.
+WARNING: makes blocking/non-blocking every protocol on that socket!
+
+
+- int udp_send (int sk, char *buffer, char *ip_address, int port);
+Sends a UDP message containing the string in buffer ('\0' terminated).
+The socket identifier, the server IP address (string format, e.g. "10.0.0.1")
+and the UDP port (integer) are passed as arguments.
+Returns 1 on success, 0 (or exits via the error_handler function) on failure.
+
+
+- int udp_binary_send (int sk, char *buffer, int msg_len, int ip_address, int port);
+Sends a UDP message containing msg_len data in buffer.
+The socket identifier, the server IP address (string format, e.g. "10.0.0.1")
+and the UDP port (integer) are passed as arguments.
+Returns 1 on success, 0 (or exits via the error_handler function) on failure.
+
+
+- int udp_receive (int sk, char *buffer);
+Receives a UDP message ('\0' terminated) and puts it in buffer.
+The socket identifier is passed as argument.
+Returns the number of bytes received, -1 (or exits via the error_handler
+function) on failure.
+The sender IP address and UDP port are saved to be used by udp_reply
+(see below).
+
+
+- int udp_binary_receive (int sk, char *buffer);
+Receives UDP data and puts them in buffer.
+The socket identifier is passed as argument.
+Returns the number of bytes received, -1 (or exits via the error_handler
+function) on failure.
+The sender IP address and UDP port are saved to be used by udp_reply
+(see below).
+
+
+- int udp_receive_and_get_sender_info (int sk, char *buffer,
+                                     char *ip_address, int *pport);
+Same as udp_receive, but returns in ip_address and pport (by reference)
+the sender IP address and UDP port.
+The socket identifier is passed as argument.
+Returns the number of bytes received, -1 (or exits via the error_handler
+function) on failure.
+
+
+- int udp_binary_receive_and_get_sender_info (int sk, char *buffer,
+                                     char *ip_address, int *pport);
+Same as udp_binary_receive, but returns in ip_address and pport (by reference)
+the sender IP address and UDP port.
+The socket identifier is passed as argument.
+Returns the number of bytes received, -1 (or exits via the error_handler
+function) on failure.
+
+
+- int udp_reply (int sk, char *buffer);
+Sends a UDP message containing the string in buffer ('\0' terminated)
+to the sender of the last received UDP message.
+The socket identifier is passed as argument.
+Returns 1 on success, 0 (or exits via the error_handler function) on failure.
+
+
+- int udp_binary_reply (int sk, char *buffer, int msg_len);
+Sends a UDP message containing msg_len data in buffer
+to the sender of the last received UDP message.
+The socket identifier is passed as argument.
+Returns 1 on success, 0 (or exits via the error_handler function) on failure.
+
+
+
+RAWSOCKETLIB
+
+Raw sockets allow sending IP datagram without any transport layer header.
+Client and server creates socket symmetrically (both execute bind).
+Therefore, client and server must run on different computers having
+different IP addresses.
+
+
+- int create_raw_socket (char *ip_address, int protocol);
+Creates a raw socket (client or server). Its own IP address (string format,
+e.g. "10.0.0.1") and protocol number (integer) are passed as arguments.
+Returns the socket identifier, -1 on failure.
+
+
+- int close_raw_socket (int sk);
+Closes a raw socket. The socket identifier is passed as argument.
+Returns 1 on success, 0 (or exits via the error_handler function) on failure.
+
+
+- int raw_send (int sk, char *buffer, char *ip_address);
+Sends an IP datagram containing the string in buffer ('\0' terminated).
+The socket identifier and the destination IP address (string format, e.g.
+"10.0.0.1") are passed as arguments.
+Returns 1 on success, 0 (or exits via the error_handler function) on failure.
+
+
+- int raw_receive_and_get_sender_info
+         (int sk, char *buffer, char *ip_address);
+Receives an IP datagram and puts it into buffer (it is NOT a message
+string: it is the entire datagram, including the IP header). 
+Returns in ip_address the sender IP address.
+The socket identifier is passed as argument.
+Returns the number of bytes received, -1 (or exits via the error_handler
+function) on failure.
+User data in buffer starts at buffer [(buffer[0] & 0xF) * 4].
+The sender IP address is saved to be used by raw_reply (see below).
+
+
+- int raw_reply (int sk, char *buffer);
+Sends an IP datagram containing the string in buffer ('\0' terminated)
+to the sender of the last IP datagram received by
+raw_receive_and_get_sender_info.
+The socket identifier is passed as argument.
+Returns 1 on success, 0 (or exits via the error_handler function) on failure.
+
+
+
+MUDPSOCKETLIB (Multicast UDP)
+
+- int create_mudp_client (char *ip_address, int port);
+Creates a Multicast UDP client. The multicast IP address and the UDP port 
+are passed as arguments.
+Returns the socket identifier, -1 on failure.
+
+
+- int create_mudp_server (char *ip_address, int port);
+Creates a Multicast UDP server. The multicast IP address (string format, 
+e.g. "239.0.0.1") and the UDP port (integer) are passed as arguments.
+Returns the socket identifier, -1 on failure.
+
+
+- int close_mudp_client (int sk);
+Closes the socket associated to the multicast UDP client. The socket 
+identifier is passed as argument.
+Returns 1 on success, 0 (or exits via the error_handler function) on failure.
+
+
+- int close_mudp_server (int sk);
+Closes the socket associated to the multicast UDP server. The socket 
+identifier is passed as argument.
+Returns 1 on success, 0 (or exits via the error_handler function) on failure.
+
+
+- int mudp_send (int sk, char *buffer);
+Sends a Multicast UDP message containing the string in buffer ('\0' terminated).
+The socket identifier, and the string are passed as arguments.
+Returns 1 on success, 0 (or exits via the error_handler function) on failure.
+
+
+- int mudp_receive (int sk, char *buffer);
+Receives a Multicast UDP message ('\0' terminated) and puts it in buffer.
+The socket identifier and the string are passed as arguments.
+Returns the number of bytes received, -1 (or exits via the error_handler
+function) on failure.
+The sender IP address and UDP port are saved to be used by udp_reply
+(see below).
+
+
+- int mudp_receive_and_get_sender_info (int sk, char *buffer,
+                                        char *ip_address, int *pport);
+Same as udp_receive, but returns in ip_address and pport (by reference)
+the sender IP address and UDP port.
+The socket identifier is passed as argument.
+Returns the number of bytes received, -1 (or exits via the error_handler
+function) on failure.
+
+
+- int mudp_binary_send (int sk, char *buffer, int data_size);
+- int mudp_binary_receive (int sk, char *buffer);
+- int mudp_binary_receive_and_get_sender_info 
+        (int sk, char *buffer, char *ip_address, int *pport);
+Same as non-binary functions, but the data type is unsigned char and the data size 
+is passed as argument.
+
+
+WARNING: Few variables are global and statically allocated. In a multi-thread 
+         environment, this limits threads to one multicast server and one 
+         multicast client in a single process. For the same reason, the UDP and
+         MUDP reply functions may not work properly in a multi-thread environment.
